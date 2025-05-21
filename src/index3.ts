@@ -2,17 +2,17 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import dotenv from "dotenv";
-import express, { RequestHandler } from "express";
+import express from "express";
 import { userModel } from "./db";
 import { messageModel } from "./db";
 
 dotenv.config();
 const app = express();
 app.use(cors());
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+// const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin:"*",
     methods: "GET,POST,PUT,DELETE,OPTIONS",
     allowedHeaders: "Content-Type, Authorization",
     credentials: true
@@ -28,23 +28,22 @@ mongoose.connect(MONGOURI)
   .catch((err) => console.error("Connection to MongoDB failed", err));
 
 //@ts-ignore
+// const authMiddleware: RequestHandler = (req, res, next) => {
+//   const token = req.headers.authorization?.split(" ")[1];
 
-const authMiddleware: RequestHandler = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+//   if (!token) {
+//     return res.status(401).json({ error: "No token provided" });
+//   }
 
-  if (!token) {
-    return res.status(401).json({ error: "No token provided" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, jwtSecret);
-    //@ts-ignore
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(403).json({ error: "Invalid token" });
-  }
-};
+//   try {
+//     const decoded = jwt.verify(token, jwtSecret);
+//     //@ts-ignore
+//     req.user = decoded;
+//     next();
+//   } catch (err) {
+//     return res.status(403).json({ error: "Invalid token" });
+//   }
+// };
 //@ts-ignore
 
 app.post("/signup", async (req, res) => {
@@ -166,9 +165,27 @@ app.post("/chat", async (req, res) => {
   }
 });
 //@ts-ignore
+app.post("/chatseen", async (req, res) => {
+  const { receiveid, senderid } = req.body;
+  if (!receiveid || !senderid) {
+    return res.status(400).json({ error: "Both receiveid and senderid are required" });
+  }
+  try {
+    await messageModel.updateMany({
+      receiverId:senderid,
+      senderId:receiveid,
+    },{$set:{
+      seen:true
+    }});
+    res.status(200).json({ message:'updated' });
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
+//@ts-ignore
 app.post("/message", async (req, res) => {
   const { senderId, receiverId, content } = req.body;
-
+console.log(senderId, receiverId, content);
   if (!senderId || !receiverId || !content) {
     return res.status(400).json({ error: "senderId, receiverId and content are required" });
   }
@@ -180,13 +197,13 @@ app.post("/message", async (req, res) => {
         { senderId: receiverId, receiverId: senderId }
       ]
     });
-
     const roomId = existingRoom ? existingRoom.roomId : Math.ceil(Math.random() * 8999 + 1000).toString();
 
-    await messageModel.create({ content, senderId, receiverId, roomId });
+    await messageModel.create({ content, senderId, receiverId,roomId,seen:false });
     res.status(201).json({ message: "Chat sent successfully" });
   } catch (error) {
     res.status(500).json({ error: error });
+    console.log(error);
   }
 });
 

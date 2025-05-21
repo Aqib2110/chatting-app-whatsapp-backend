@@ -13,7 +13,8 @@ const userSchema = new mongoose_1.Schema({
     },
     email: {
         required: true,
-        type: String
+        type: String,
+        unique: true
     },
     password: {
         required: true,
@@ -37,6 +38,10 @@ const messageSchema = new mongoose_1.Schema({
     },
     roomId: {
         type: String,
+        required: true
+    },
+    seen: {
+        type: Boolean,
         required: true
     }
 });
