@@ -184,7 +184,7 @@ app.post("/chatseen", async (req, res) => {
 });
 //@ts-ignore
 app.post("/message", async (req, res) => {
-  const { senderId, receiverId, content,createdAt,seen } = req.body;
+  const { senderId, receiverId, content,seen } = req.body;
 console.log(senderId, receiverId, content);
   if (!senderId || !receiverId || !content) {
     return res.status(400).json({ error: "senderId, receiverId and content are required" });
@@ -199,7 +199,7 @@ console.log(senderId, receiverId, content);
     });
     const roomId = existingRoom ? existingRoom.roomId : Math.ceil(Math.random() * 8999 + 1000).toString();
 
-    await messageModel.create({ content, senderId, receiverId,roomId,createdAt,seen });
+    await messageModel.create({ content, senderId, receiverId,roomId,seen });
     res.status(201).json({ message: "Chat sent successfully" });
   } catch (error) {
     res.status(500).json({ error: error });
