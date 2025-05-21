@@ -34,6 +34,10 @@ const messageSchema = new Schema({
     type:String,
     required:true
    },
+    createdAt:{
+    type:String,
+    required:true
+    },
    seen:{
     type:Boolean,
     required:true
